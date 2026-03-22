@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard — Native Welfare</title>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="referrer" content="no-referrer"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#060a0f; --ink1:#0c1219; --ink2:#111a26; --ink3:#192232;
+  --glass:rgba(255,255,255,.04); --glass2:rgba(255,255,255,.07);
+  --b0:rgba(255,255,255,.05); --b1:rgba(255,255,255,.09); --b2:rgba(255,255,255,.15);
+  --jade:#10b981; --jade-d:#059669; --jade-l:#6ee7b7;
+  --gold:#f59e0b; --gold-l:#fcd34d; --rose:#f43f5e; --sky:#38bdf8; --violet:#8b5cf6;
+  --tx:#f0f4f8; --tx2:#8b98a9; --tx3:#4a5568;
+  --fh:'Instrument Serif',serif; --fb:'Geist',sans-serif;
+  --r:10px; --r2:16px; --r3:22px;
+  --ease:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --sb:240px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--tx);font-family:var(--fb);overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font:inherit}
+textarea,input,select{font-family:var(--fb)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:var(--jade-d);border-radius:4px}
+::selection{background:rgba(16,185,129,.3);color:#fff}
+#auth-gate{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#auth-gate.gone{display:none}
+.gate-ring{width:34px;height:34px;border:2px solid var(--b1);border-top-color:var(--jade);border-radius:50%;animation:spin .8s linear infinite}
+.gate-txt{font-size:.8rem;color:var(--tx3)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#app{display:flex;min-height:100vh;opacity:0;transition:opacity .4s}
+#app.ready{opacity:1}
+.sb{width:var(--sb);flex-shrink:0;background:var(--ink1);border-right:1px solid var(--b0);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:transform .3s var(--ease)}
+.sb-top{padding:20px 16px;border-bottom:1px solid var(--b0)}
+.sb-brand{display:flex;align-items:center;gap:8px}
+.sb-sq{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--jade),var(--jade-d));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;box-shadow:0 3px 10px rgba(16,185,129,.35);flex-shrink:0}
+.sb-nm{font-size:.93rem;font-weight:600;letter-spacing:-.01em}
+.sb-nm em{font-style:normal;color:var(--jade-l)}
+.sb-pill{display:inline-flex;align-items:center;font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;background:rgba(245,158,11,.12);color:var(--gold-l);border:1px solid rgba(245,158,11,.2);padding:2px 8px;border-radius:100px;margin-top:5px}
+.sb-user{padding:12px 16px;border-bottom:1px solid var(--b0);font-size:.78rem}
+.sb-user strong{display:block;color:var(--tx);margin-bottom:1px}
+.sb-user span{color:var(--tx3);font-size:.68rem}
+.sb-nav{padding:12px 8px;flex:1;display:flex;flex-direction:column;gap:2px}
+.sb-sec-lbl{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--tx3);padding:7px 10px 3px;margin-top:5px}
+.sb-btn{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--r);font-size:.83rem;font-weight:500;color:var(--tx2);transition:all .18s;cursor:pointer;width:100%}
+.sb-btn:hover{color:var(--tx);background:var(--glass)}
+.sb-btn.on{color:var(--jade-l);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.14)}
+.sb-btn .ic{width:17px;text-align:center;font-size:.82rem;flex-shrink:0}
+.sb-ct{margin-left:auto;background:var(--jade);color:#fff;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:100px}
+.sb-bot{padding:12px 8px;border-top:1px solid var(--b0)}
+.sb-logout{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--r);font-size:.83rem;font-weight:500;color:rgba(244,63,94,.65);transition:all .18s;width:100%}
+.sb-logout:hover{color:var(--rose);background:rgba(244,63,94,.07)}
+.main{margin-left:var(--sb);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:15px 26px;border-bottom:1px solid var(--b0);background:rgba(6,10,15,.82);backdrop-filter:blur(18px);position:sticky;top:0;z-index:50}
+.tb-title{font-family:var(--fh);font-size:1.28rem;font-weight:400}
+.tb-right{display:flex;align-items:center;gap:10px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--jade);box-shadow:0 0 7px var(--jade);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.live-txt{font-size:.75rem;color:var(--tx2)}
+.sb-tog{display:none;flex-direction:column;gap:4px;padding:6px;border-radius:var(--r);background:var(--glass);border:1px solid var(--b1)}
+.sb-tog span{display:block;width:17px;height:1.5px;background:var(--tx);border-radius:2px;transition:all .3s}
+.sb-tog.x span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+.sb-tog.x span:nth-child(2){opacity:0}
+.sb-tog.x span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+.sb-scrim{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .3s}
+.sb-scrim.show{opacity:1;pointer-events:all}
+.content{padding:26px;flex:1}
+.panel{display:none}.panel.on{display:block}
+.panel-hd{margin-bottom:22px}
+.panel-title{font-family:var(--fh);font-size:1.58rem;font-weight:400;margin-bottom:5px}
+.panel-sub{font-size:.83rem;color:var(--tx2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:var(--r);font-size:.83rem;font-weight:600;transition:all .2s var(--ease);white-space:nowrap;overflow:hidden;position:relative}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);opacity:0;transition:opacity .2s}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(.96)}
+.btn-jade{background:linear-gradient(135deg,var(--jade),var(--jade-d));color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.35)}
+.btn-jade:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(16,185,129,.5)}
+.btn-ghost{background:var(--glass);border:1px solid var(--b1);color:var(--tx)}
+.btn-ghost:hover{background:var(--glass2);border-color:var(--b2);transform:translateY(-1px)}
+.btn-danger{background:linear-gradient(135deg,var(--rose),#e11d48);color:#fff;box-shadow:0 4px 14px rgba(244,63,94,.3)}
+.btn-danger:hover{transform:translateY(-2px)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#fff}
+.btn-gold:hover{transform:translateY(-2px)}
+.btn-sm{padding:7px 13px;font-size:.76rem}
+.btn-full{width:100%;justify-content:center}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}
+.sc{background:var(--glass);border:1px solid var(--b1);border-radius:var(--r2);padding:17px;transition:all .2s}
+.sc:hover{border-color:var(--b2);transform:translateY(-2px)}
+.sc-ic{font-size:1.35rem;margin-bottom:9px}
+.sc-v{font-family:var(--fh);font-size:1.75rem;color:var(--jade-l);line-height:1;margin-bottom:2px}
+.sc-l{font-size:.72rem;color:var(--tx3)}
+.form-card{background:var(--glass);border:1px solid var(--b1);border-radius:var(--r2);padding:24px;max-width:680px}
+.fc-hd{font-family:var(--fh);font-size:1.08rem;font-weight:400;margin-bottom:18px;padding-bottom:13px;border-bottom:1px solid var(--b0)}
+.f-stack{display:flex;flex-direction:column;gap:13px}
+.f-row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3)}
+.fi{background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--tx);font-size:.88rem;width:100%;transition:border-color .2s,box-shadow .2s}
+.fi::placeholder{color:var(--tx3)}
+.fi:focus{outline:none;border-color:rgba(16,185,129,.45);box-shadow:0 0 0 3px rgba(16,185,129,.07)}
+.fsel{appearance:none;cursor:pointer}.fsel option{background:var(--ink2)}
+.fta{resize:vertical;min-height:90px}
+.fhint{font-size:.69rem;color:var(--tx3);margin-top:3px}
+.tags-area{display:flex;flex-wrap:wrap;align-items:flex-start;gap:5px;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r);padding:8px 10px;min-height:44px;cursor:text;transition:border-color .2s}
+.tags-area:focus-within{border-color:rgba(16,185,129,.45)}
+.tag{display:inline-flex;align-items:center;gap:4px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.22);border-radius:6px;padding:3px 8px 3px 9px;font-size:.72rem;color:var(--jade-l)}
+.tag-x{color:var(--tx3);transition:color .15s}.tag-x:hover{color:var(--rose)}
+.tag-in{background:none;border:none;color:var(--tx);font-size:.8rem;min-width:100px;flex:1;padding:2px 4px}
+.tag-in::placeholder{color:var(--tx3)}
+.f-acts{display:flex;gap:9px;padding-top:5px;flex-wrap:wrap}
+.edit-bar{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);border-radius:var(--r);padding:9px 13px;font-size:.81rem;color:var(--gold-l);display:none;align-items:center;gap:9px;margin-bottom:14px}
+.edit-bar.show{display:flex}
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:.62rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.bdg-jade{background:rgba(16,185,129,.15);color:var(--jade-l);border:1px solid rgba(16,185,129,.22)}
+.bdg-gold{background:rgba(245,158,11,.12);color:var(--gold-l);border:1px solid rgba(245,158,11,.2)}
+.bdg-sky{background:rgba(56,189,248,.1);color:#7dd3fc;border:1px solid rgba(56,189,248,.17)}
+.bdg-rose{background:rgba(244,63,94,.1);color:#fb7185;border:1px solid rgba(244,63,94,.17)}
+.bdg-muted{background:var(--b0);color:var(--tx3);border:1px solid var(--b0)}
+.p-list{display:flex;flex-direction:column;gap:8px}
+.p-row{background:var(--glass);border:1px solid var(--b1);border-radius:var(--r2);padding:13px 17px;display:flex;align-items:center;gap:13px;transition:all .2s}
+.p-row:hover{border-color:var(--b2);background:var(--glass2)}
+.p-em{font-size:1.45rem;width:36px;text-align:center;flex-shrink:0}
+.p-thumb{width:48px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid var(--b1)}
+.p-inf{flex:1;min-width:0}
+.p-nm{font-weight:600;font-size:.87rem;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-meta{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--tx3);flex-wrap:wrap}
+.p-acts{display:flex;gap:6px;flex-shrink:0}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:780px}
+.s-card{background:var(--glass);border:1px solid var(--b1);border-radius:var(--r2);padding:22px}
+.s-card-hd{font-family:var(--fh);font-size:1rem;font-weight:400;margin-bottom:15px;padding-bottom:11px;border-bottom:1px solid var(--b0)}
+.danger-zone{background:rgba(244,63,94,.05);border:1px solid rgba(244,63,94,.14);border-radius:var(--r);padding:15px;margin-top:15px}
+.danger-zone h4{font-size:.78rem;font-weight:600;color:var(--rose);margin-bottom:5px}
+.danger-zone p{font-size:.74rem;color:var(--tx3);line-height:1.6;margin-bottom:11px}
+/* Image upload */
+.file-in{background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r);padding:10px 13px;color:var(--tx);font-size:.82rem;width:100%;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.file-in:hover{border-color:var(--b2)}
+.file-in:focus{outline:none;border-color:rgba(16,185,129,.45);box-shadow:0 0 0 3px rgba(16,185,129,.07)}
+.file-in::file-selector-button{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.22);border-radius:6px;padding:4px 10px;color:var(--jade-l);font-size:.75rem;font-weight:600;cursor:pointer;margin-right:10px;transition:background .2s}
+.file-in::file-selector-button:hover{background:rgba(16,185,129,.22)}
+.img-preview-wrap{margin-top:8px;position:relative;display:none;width:100%;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;background:var(--b0);border:1px solid var(--b1)}
+.img-preview-wrap.show{display:block}
+.img-preview-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.img-preview-remove{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:rgba(244,63,94,.9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;cursor:pointer;border:none;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:background .2s}
+.img-preview-remove:hover{background:var(--rose)}
+.img-preview-label{position:absolute;bottom:7px;left:7px;background:rgba(6,10,15,.82);border:1px solid var(--b1);border-radius:6px;padding:3px 9px;font-size:.65rem;color:var(--jade-l);font-weight:600;backdrop-filter:blur(8px)}
+/* Toast */
+#toasts{position:fixed;bottom:16px;right:16px;z-index:9000;display:flex;flex-direction:column;gap:6px}
+.toast{background:rgba(8,13,22,.96);border:1px solid var(--b2);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:8px;font-size:.81rem;color:var(--tx);box-shadow:0 8px 28px rgba(0,0,0,.5);backdrop-filter:blur(18px);max-width:300px;animation:tIn .28s var(--spring)}
+.toast.ok{border-left:3px solid var(--jade)}.toast.er{border-left:3px solid var(--rose)}.toast.info{border-left:3px solid var(--gold)}
+@keyframes tIn{from{opacity:0;transform:translateX(18px) scale(.9)}to{opacity:1;transform:none}}
+/* Confirm dialog */
+.conf-ov{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.76);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;visibility:hidden;transition:all .24s}
+.conf-ov.open{opacity:1;visibility:visible}
+.conf-modal{background:linear-gradient(145deg,var(--ink2),var(--ink1));border:1px solid var(--b2);border-radius:var(--r2);padding:26px;max-width:380px;width:100%;transform:scale(.93);transition:transform .26s var(--spring);box-shadow:0 28px 64px rgba(0,0,0,.6)}
+.conf-ov.open .conf-modal{transform:scale(1)}
+.conf-ic{font-size:1.9rem;margin-bottom:11px}
+.conf-h{font-family:var(--fh);font-size:1.18rem;font-weight:400;margin-bottom:6px}
+.conf-p{font-size:.82rem;color:var(--tx2);line-height:1.65;margin-bottom:18px}
+.conf-btns{display:flex;gap:9px;justify-content:flex-end}
+/* Responsive */
+@media(max-width:900px){:root{--sb:0px}.sb{transform:translateX(-100%)}.sb.open{transform:translateX(0);width:240px}.sb-tog{display:flex}.main{margin-left:0}.stat-grid{grid-template-columns:1fr 1fr}.settings-grid{grid-template-columns:1fr}.f-row2{grid-template-columns:1fr}}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr 1fr}.content{padding:16px}}
+</style>
+</head>
+<body>
+
+<div id="auth-gate"><div class="gate-ring"></div><div class="gate-txt">Verifying session…</div></div>
+
+<div id="app">
+  <div class="sb-scrim" id="sb-scrim" onclick="window.closeSB()"></div>
+
+  <aside class="sb" id="sb">
+    <div class="sb-top">
+      <div class="sb-brand"><div class="sb-sq">NW</div><div class="sb-nm">Native <em>Welfare</em></div></div>
+      <div class="sb-pill">⚙ Admin Panel</div>
+    </div>
+    <div class="sb-user"><strong id="sb-user">admin</strong><span id="sb-time">Logged in just now</span></div>
+    <nav class="sb-nav">
+      <div class="sb-sec-lbl">Overview</div>
+      <button class="sb-btn on" onclick="window.go('dashboard',this)"><span class="ic">📊</span> Dashboard</button>
+      <div class="sb-sec-lbl">Products</div>
+      <button class="sb-btn" onclick="window.go('add-product',this)"><span class="ic">➕</span> Add Product</button>
+      <button class="sb-btn" onclick="window.go('all-products',this)">
+        <span class="ic">📦</span> All Products
+        <span class="sb-ct" id="prod-badge">0</span>
+      </button>
+      <div class="sb-sec-lbl">Admin</div>
+      <button class="sb-btn" onclick="window.go('settings',this)"><span class="ic">⚙️</span> Settings</button>
+      <button class="sb-btn" onclick="window.go('website-settings',this)"><span class="ic">🌐</span> Website Settings</button>
+      <div class="sb-sec-lbl">Links</div>
+      <a class="sb-btn" href="index.html" target="_blank" rel="noopener"><span class="ic">🌐</span> View Store</a>
+    </nav>
+    <div class="sb-bot"><button class="sb-logout" onclick="window.confirmLogout()"><span>🚪</span> Logout</button></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:11px">
+        <button class="sb-tog" id="sb-tog" onclick="window.toggleSB()"><span></span><span></span><span></span></button>
+        <div class="tb-title" id="tb-title">Dashboard</div>
+      </div>
+      <div class="tb-right">
+        <div class="live-dot"></div>
+        <span class="live-txt">Live</span>
+        <button class="btn btn-ghost btn-sm" onclick="window.confirmLogout()">🚪 Logout</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel on" id="panel-dashboard">
+        <div class="panel-hd">
+          <h1 class="panel-title">Welcome back! 👋</h1>
+          <p class="panel-sub">Your store overview and quick stats.</p>
+        </div>
+        <div class="stat-grid" id="stat-grid"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;flex-wrap:wrap;gap:9px">
+          <h2 style="font-family:var(--fh);font-size:1.08rem;font-weight:400">Recent Products</h2>
+          <button class="btn btn-jade btn-sm" onclick="window.go('add-product',document.querySelector('[onclick*=add-product]'))">+ Add New</button>
+        </div>
+        <div id="dash-recent"></div>
+      </div>
+
+      <!-- ADD PRODUCT -->
+      <div class="panel" id="panel-add-product">
+        <div class="panel-hd">
+          <h1 class="panel-title">Add Product</h1>
+          <p class="panel-sub">Fill in details. Product will appear on the store instantly after saving.</p>
+        </div>
+        <div class="edit-bar" id="edit-bar">
+          <span>✏️</span>
+          <span>Editing: <strong id="edit-bar-name"></strong></span>
+          <button class="btn btn-ghost btn-sm" onclick="window.cancelEdit()" style="margin-left:auto">Cancel</button>
+        </div>
+        <div class="form-card">
+          <div class="fc-hd">📦 Product Details</div>
+          <form id="product-form" class="f-stack">
+            <div class="f-row2">
+              <div class="fg">
+                <label class="fl" for="f-title">Title *</label>
+                <input class="fi" type="text" id="f-title" placeholder="e.g. Gaming Thumbnail Pack" required/>
+              </div>
+              <div class="fg">
+                <label class="fl" for="f-cat">Category *</label>
+                <select class="fi fsel" id="f-cat" required>
+                  <option value="">Choose…</option>
+                  <option value="gaming">🎮 Gaming</option>
+                  <option value="anime">⛩️ Anime</option>
+                  <option value="courses">📚 Courses</option>
+                  <option value="editing">🎬 Editing</option>
+                </select>
+              </div>
+            </div>
+            <div class="f-row2">
+              <div class="fg">
+                <label class="fl" for="f-price">Sale Price (₹) *</label>
+                <input class="fi" type="number" id="f-price" placeholder="199" min="1" required/>
+              </div>
+              <div class="fg">
+                <label class="fl" for="f-orig">Original Price (₹)</label>
+                <input class="fi" type="number" id="f-orig" placeholder="499"/>
+              </div>
+            </div>
+            <div class="f-row2">
+              <div class="fg">
+                <label class="fl" for="f-emoji">Display Emoji *</label>
+                <input class="fi" type="text" id="f-emoji" placeholder="🎮" required/>
+              </div>
+              <div class="fg" style="justify-content:center; padding-top:18px">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--tx2)">
+                  <input type="checkbox" id="f-pop" style="width:16px; height:16px"> Mark as Popular Product
+                </label>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Product Image</label>
+              <input class="file-in" type="file" id="f-file" accept="image/*"/>
+              <div class="img-preview-wrap" id="img-preview-wrap">
+                  <img src="" id="img-preview">
+                  <button type="button" class="img-preview-remove" onclick="window.removeFile()">✕</button>
+                  <div class="img-preview-label">Ready to upload</div>
+              </div>
+              <p class="fhint">Or enter Image URL below if you don't want to upload.</p>
+              <input class="fi" type="url" id="f-image" placeholder="https://example.com/image.jpg"/>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-desc">Description *</label>
+              <textarea class="fi fta" id="f-desc" placeholder="Brief details..." required></textarea>
+            </div>
+            <div class="fg">
+                <label class="fl">Features</label>
+                <div class="tags-area" id="tags-area" onclick="document.getElementById('tag-in').focus()">
+                    <input type="text" id="tag-in" class="tag-in" placeholder="Type highlight and press Enter...">
+                </div>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-video">Product Video URL (optional)</label>
+              <input class="fi" type="url" id="f-video" placeholder="https://youtube.com/watch?v=... or embed URL"/>
+              <p class="fhint">YouTube or direct embed URL. Shown inside the product popup for buyers.</p>
+            </div>
+            <div class="f-acts">
+              <button type="submit" class="btn btn-jade btn-full" id="f-submit-btn">Save Product</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ALL PRODUCTS -->
+      <div class="panel" id="panel-all-products">
+        <div class="panel-hd">
+          <h1 class="panel-title">All Products</h1>
+          <p class="panel-sub">Catalog of your active products.</p>
+        </div>
+        <div class="p-list" id="p-list"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="panel" id="panel-settings">
+          <div class="panel-hd">
+              <h1 class="panel-title">Settings</h1>
+              <p class="panel-sub">Admin and panel configuration.</p>
+          </div>
+          <div class="settings-grid">
+              <div class="s-card">
+                  <div class="s-card-hd">Account</div>
+                  <p class="panel-sub">Admin Profile</p>
+                  <div class="danger-zone">
+                      <h4>Danger Zone</h4>
+                      <p>Logging out will end your session.</p>
+                      <button class="btn btn-danger btn-sm" onclick="window.confirmLogout()">End Session</button>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- WEBSITE SETTINGS -->
+      <div class="panel" id="panel-website-settings">
+        <div class="panel-hd">
+          <h1 class="panel-title">Website Settings</h1>
+          <p class="panel-sub">Edit site-wide content. Changes save to Firestore and apply to your store in real-time.</p>
+        </div>
+
+        <!-- Live-sync status badge -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:.78rem;color:var(--tx3)">
+          <span id="ws-sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--tx3);display:inline-block;transition:background .3s"></span>
+          <span id="ws-sync-label">Connecting to Firestore…</span>
+        </div>
+
+        <div class="form-card" style="max-width:760px">
+          <div class="fc-hd">🌐 Site Identity &amp; Content</div>
+          <div class="f-stack">
+
+            <div class="f-row2">
+              <div class="fg">
+                <label class="fl" for="ws-title">Website Title</label>
+                <input class="fi" type="text" id="ws-title" placeholder="Native Welfare"/>
+                <p class="fhint">Shown in browser tab and search results.</p>
+              </div>
+              <div class="fg">
+                <label class="fl" for="ws-email">Contact Email</label>
+                <input class="fi" type="email" id="ws-email" placeholder="support@nativewelfare.in"/>
+              </div>
+            </div>
+
+            <div class="fg">
+              <label class="fl" for="ws-hero-heading">Hero Heading</label>
+              <input class="fi" type="text" id="ws-hero-heading" placeholder="Buy Premium Digital Products"/>
+              <p class="fhint">The large headline displayed in the hero section.</p>
+            </div>
+
+            <div class="fg">
+              <label class="fl" for="ws-hero-desc">Hero Description</label>
+              <textarea class="fi fta" id="ws-hero-desc" placeholder="High-quality editing packs, gaming assets, anime bundles &amp; creator courses…" style="min-height:80px"></textarea>
+              <p class="fhint">Subtext shown below the hero heading.</p>
+            </div>
+
+            <div class="f-row2">
+              <div class="fg">
+                <label class="fl" for="ws-upi">Default UPI ID</label>
+                <input class="fi" type="text" id="ws-upi" placeholder="nativewelfare@upi"/>
+                <p class="fhint">Used as fallback if a product has no UPI set.</p>
+              </div>
+              <div class="fg">
+                <label class="fl" for="ws-telegram">Telegram Link</label>
+                <input class="fi" type="url" id="ws-telegram" placeholder="https://t.me/nativewelfare"/>
+                <p class="fhint">Used in Buy Now modal and footer.</p>
+              </div>
+            </div>
+
+            <div class="f-acts">
+              <button class="btn btn-jade" id="ws-save-btn" onclick="window.saveWebsiteSettings()">
+                💾 Save Settings
+              </button>
+              <span id="ws-save-status" style="font-size:.78rem;color:var(--tx3);align-self:center"></span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Info card: how index.html reads these -->
+        <div class="s-card" style="max-width:760px;margin-top:18px">
+          <div class="s-card-hd">ℹ️ How it works</div>
+          <p style="font-size:.82rem;color:var(--tx2);line-height:1.75">
+            Settings are saved to the <code style="color:var(--jade-l);font-size:.78rem">settings</code> collection in Firestore (document ID: <code style="color:var(--jade-l);font-size:.78rem">main</code>).<br/>
+            Your <strong>index.html</strong> reads these on load via <code style="color:var(--jade-l);font-size:.78rem">onSnapshot</code> and applies them instantly — no redeploy needed.<br/>
+            Paste this snippet in your index.html script to consume the settings:
+          </p>
+          <pre style="background:rgba(0,0,0,.3);border:1px solid var(--b1);border-radius:var(--r);padding:13px;font-size:.72rem;color:var(--jade-l);margin-top:12px;overflow-x:auto;white-space:pre-wrap">onSnapshot(doc(db, 'settings', 'main'), (snap) => {
+  const s = snap.data() || {};
+  if (s.title)        document.title = s.title;
+  if (s.heroHeading)  document.querySelector('.hero-h1 .line1').textContent = s.heroHeading;
+  if (s.heroDesc)     document.querySelector('.hero-sub').textContent = s.heroDesc;
+});</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- Confirm dialog -->
+<div class="conf-ov" id="conf-ov" onclick="window.maybeCloseConf(event)">
+  <div class="conf-modal">
+    <div class="conf-ic" id="conf-ic">⚠️</div>
+    <div class="conf-h" id="conf-h">Are you sure?</div>
+    <div class="conf-p" id="conf-p">This action cannot be undone.</div>
+    <div class="conf-btns">
+      <button class="btn btn-ghost btn-sm" onclick="window.closeConf()">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="conf-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, setDoc, getDoc, deleteDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCdpEdzNRuZKkc0Bru51ER4k4w-Ir-jElc",
+  authDomain: "native-welfare.firebaseapp.com",
+  databaseURL: "https://native-welfare-default-rtdb.firebaseio.com",
+  projectId: "native-welfare",
+  storageBucket: "native-welfare.firebasestorage.app",
+  messagingSenderId: "938557467037",
+  appId: "1:938557467037:web:6990a944b41f7b5b55e774",
+  measurementId: "G-4YGZK4Y4HY"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+/* ─── AUTH PROTECTION ────────────────────────────────────── */
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = 'panel-k7xlogin.html';
+  } else {
+    document.getElementById('auth-gate').classList.add('gone');
+    document.getElementById('app').classList.add('ready');
+    document.getElementById('sb-user').innerHTML = `<strong>Admin</strong> <span>${user.email}</span>`;
+    initData();
+  }
+});
+
+/* ─── STATE ──────────────────────────────────────────────── */
+let products = [];
+let editId = null;
+let features = [];
+let _confCB = null;
+let currentFile = null;
+
+/* ─── UI HELPERS ──────────────────────────────────────────── */
+function toast(msg, type = 'ok') {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = type === 'ok' ? '✅' : type === 'er' ? '❌' : 'ℹ️';
+  el.innerHTML = `<span>${icon}</span> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+window.go = function(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-' + id).classList.add('on');
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  document.getElementById('tb-title').textContent = id.replace('-', ' ').toUpperCase();
+};
+
+window.toggleSB = () => { document.getElementById('sb').classList.toggle('open'); document.getElementById('sb-scrim').classList.toggle('show'); document.getElementById('sb-tog').classList.toggle('x'); };
+window.closeSB = () => { document.getElementById('sb').classList.remove('open'); document.getElementById('sb-scrim').classList.remove('show'); document.getElementById('sb-tog').classList.remove('x'); };
+
+/* ─── FILE UPLOAD LOGIC ───────────────────────────────────── */
+const fileIn = document.getElementById('f-file');
+const previewWrap = document.getElementById('img-preview-wrap');
+const previewImg = document.getElementById('img-preview');
+
+fileIn.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = (re) => {
+      previewImg.src = re.target.result;
+      previewWrap.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+window.removeFile = () => {
+  currentFile = null;
+  fileIn.value = '';
+  previewWrap.classList.remove('show');
+  previewImg.src = '';
+};
+
+async function uploadProductImage(file) {
+  try {
+    const path = `products/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const storageRef = ref(storage, path);
+
+    // uploadBytes returns a snapshot — await it fully before calling getDownloadURL
+    const snapshot = await uploadBytes(storageRef, file);
+
+    // getDownloadURL must be called on the snapshot's ref, not the original ref
+    const url = await getDownloadURL(snapshot.ref);
+
+    if (!url) throw new Error('getDownloadURL returned empty URL');
+    return url;
+  } catch (err) {
+    console.error('[Image Upload] failed:', err);
+    throw new Error('Image upload failed: ' + (err.message || err.code || 'Unknown error'));
+  }
+}
+
+/* ─── TAGS LOGIC ─────────────────────────────────────────── */
+const tagIn = document.getElementById('tag-in');
+const tagsArea = document.getElementById('tags-area');
+tagIn.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') {
+        e.preventDefault();
+        const v = tagIn.value.trim();
+        if(v && !features.includes(v)){
+            features.push(v);
+            tagIn.value = '';
+            renderTags();
+        }
+    }
+});
+function renderTags() {
+    tagsArea.querySelectorAll('.tag').forEach(t => t.remove());
+    features.forEach((f, i) => {
+        const s = document.createElement('span'); s.className = 'tag';
+        s.innerHTML = `${f} <span class="tag-x" onclick="window.removeTag(${i})">✕</span>`;
+        tagsArea.insertBefore(s, tagIn);
+    });
+}
+window.removeTag = (i) => { features.splice(i, 1); renderTags(); };
+
+/* ─── DATA & CRUD ────────────────────────────────────────── */
+function initData() {
+  const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderDashboard();
+    renderAllProducts();
+    document.getElementById('prod-badge').textContent = products.length;
+  }, (err) => {
+    console.error('[Products] onSnapshot error:', err);
+    toast('Could not load products: ' + err.message, 'er');
+  });
+
+  // Pre-fill website settings inputs immediately on load using getDoc
+  loadSettingsOnce();
+}
+
+function renderDashboard() {
+    const grid = document.getElementById('stat-grid');
+    const totalValue = products.reduce((acc, p) => acc + (Number(p.price) || 0), 0);
+    const categories = [...new Set(products.map(p => p.category))].length;
+    grid.innerHTML = `
+        <div class="sc"><div class="sc-ic">📦</div><div class="sc-v">${products.length}</div><div class="sc-l">Products</div></div>
+        <div class="sc"><div class="sc-ic">🏷️</div><div class="sc-v">${categories}</div><div class="sc-l">Active Categories</div></div>
+        <div class="sc"><div class="sc-ic">💰</div><div class="sc-v">₹${totalValue.toLocaleString()}</div><div class="sc-l">Store Value</div></div>
+        <div class="sc"><div class="sc-ic">🔥</div><div class="sc-v">${products.filter(p=>p.popular).length}</div><div class="sc-l">Popular Items</div></div>
+    `;
+}
+
+function renderAllProducts() {
+    const list = document.getElementById('p-list');
+    list.innerHTML = products.map(p => `
+        <div class="p-row">
+            <div class="p-em">${p.emoji || '📦'}</div>
+            <div class="p-inf">
+                <div class="p-nm">${p.title}</div>
+                <div class="p-meta">
+                  <span class="bdg bdg-jade">${p.category}</span>
+                  <span>₹${p.price}</span>
+                  ${p.popular ? '<span class="bdg bdg-gold">Popular</span>' : ''}
+                </div>
+            </div>
+            <div class="p-acts">
+                <button class="btn btn-ghost btn-sm" onclick="window.editProduct('${p.id}')">✏️ Edit</button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--rose)" onclick="window.askDelete('${p.id}')">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+const productForm = document.getElementById('product-form');
+productForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('f-submit-btn');
+    btn.disabled = true;
+    btn.textContent = editId ? 'Updating...' : 'Saving...';
+
+    try {
+        // Resolve image: file upload takes priority over pasted URL
+        let imageUrl = document.getElementById('f-image').value.trim();
+
+        if (currentFile) {
+            btn.textContent = 'Uploading image…';
+            try {
+                imageUrl = await uploadProductImage(currentFile);
+                toast('Image uploaded successfully.', 'ok');
+            } catch (uploadErr) {
+                console.error('[Image upload] error:', uploadErr);
+                toast(uploadErr.message || 'Image upload failed — check Storage rules.', 'er');
+                btn.disabled = false;
+                btn.textContent = 'Save Product';
+                return; // stop — do not save without the image
+            }
+            btn.textContent = editId ? 'Updating...' : 'Saving...';
+        }
+
+        const title    = document.getElementById('f-title').value.trim();
+        const category = document.getElementById('f-cat').value;
+        const price    = Number(document.getElementById('f-price').value);
+
+        if (!title)    { toast('Title is required.', 'er'); return; }
+        if (!category) { toast('Category is required.', 'er'); return; }
+        if (!price)    { toast('Price is required.', 'er'); return; }
+
+        const data = {
+            title,
+            category,
+            price,
+            originalPrice: Number(document.getElementById('f-orig').value) || null,
+            emoji:         document.getElementById('f-emoji').value.trim(),
+            popular:       document.getElementById('f-pop').checked,
+            image:         imageUrl || '',
+            description:   document.getElementById('f-desc').value.trim(),
+            features:      features,
+            videoUrl:      document.getElementById('f-video') ? document.getElementById('f-video').value.trim() : '',
+            updatedAt:     serverTimestamp()
+        };
+
+        if (editId) {
+            await updateDoc(doc(db, 'products', editId), data);
+            toast('Product updated!', 'ok');
+        } else {
+            data.createdAt = serverTimestamp();
+            await addDoc(collection(db, 'products'), data);
+            toast('Product added!', 'ok');
+        }
+        window.cancelEdit();
+        window.go('all-products', document.querySelector('[onclick*=all-products]'));
+    } catch (err) {
+        console.error('[Product save] error:', err);
+        toast('Error saving product: ' + (err.message || 'Unknown error'), 'er');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Product';
+    }
+});
+
+window.editProduct = (id) => {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    editId = id;
+    document.getElementById('f-title').value = p.title;
+    document.getElementById('f-cat').value = p.category;
+    document.getElementById('f-price').value = p.price;
+    document.getElementById('f-orig').value = p.originalPrice || '';
+    document.getElementById('f-emoji').value = p.emoji;
+    document.getElementById('f-pop').checked = p.popular || false;
+    document.getElementById('f-image').value = p.image || '';
+    document.getElementById('f-desc').value = p.description;
+    const fVideo = document.getElementById('f-video');
+    if (fVideo) fVideo.value = p.videoUrl || '';
+    features = p.features || [];
+    renderTags();
+    
+    if (p.image) {
+      previewImg.src = p.image;
+      previewWrap.classList.add('show');
+    }
+
+    document.getElementById('edit-bar').classList.add('show');
+    document.getElementById('edit-bar-name').textContent = p.title;
+    window.go('add-product', document.querySelector('[onclick*=add-product]'));
+};
+
+window.cancelEdit = () => {
+    editId = null;
+    currentFile = null;
+    features = [];
+    productForm.reset();
+    renderTags();
+    window.removeFile();
+    document.getElementById('edit-bar').classList.remove('show');
+};
+
+window.askDelete = (id) => {
+    const p = products.find(x => x.id === id);
+    window.confirmUI(`Delete "${p.title}"?`, `This will permanently remove the product from store.`, "🗑️ Delete Permanently", async () => {
+        try {
+            await deleteDoc(doc(db, "products", id));
+            toast("Product deleted.");
+        } catch (err) { toast("Delete failed.", "er"); }
+    });
+};
+
+/* ─── CONFIRM DIALOG ─────────────────────────────────────── */
+window.confirmUI = (h, p, btnTxt, cb) => {
+  _confCB = cb;
+  document.getElementById('conf-h').textContent = h;
+  document.getElementById('conf-p').textContent = p;
+  document.getElementById('conf-ok').textContent = btnTxt;
+  document.getElementById('conf-ov').classList.add('open');
+};
+window.closeConf = () => { document.getElementById('conf-ov').classList.remove('open'); _confCB = null; };
+document.getElementById('conf-ok').onclick = () => { if (_confCB) _confCB(); window.closeConf(); };
+window.maybeCloseConf = (e) => { if (e.target.id === 'conf-ov') window.closeConf(); };
+
+/* ─── WEBSITE SETTINGS (Firestore: settings/main) ──────────
+   KEY FIX: setDoc and getDoc are imported at the TOP of the
+   module — NOT via dynamic import() inside this function.
+   Dynamic re-import of an already-loaded module silently fails
+   in many environments, causing the save to do nothing.
+   ─────────────────────────────────────────────────────────── */
+
+const settingsRef = doc(db, 'settings', 'main');
+
+// All editable fields: Firestore key → HTML element id
+const SETTING_FIELDS = {
+  title:       'ws-title',
+  email:       'ws-email',
+  heroHeading: 'ws-hero-heading',
+  heroDesc:    'ws-hero-desc',
+  upiId:       'ws-upi',
+  telegram:    'ws-telegram'
+};
+
+// Helper: fill all inputs from a plain data object
+function applySettingsToForm(data) {
+  Object.entries(SETTING_FIELDS).forEach(([key, elId]) => {
+    const el = document.getElementById(elId);
+    if (el && data[key] !== undefined && data[key] !== null) {
+      el.value = data[key];
+    }
+  });
+}
+
+// On page load: fetch current settings once with getDoc and pre-fill inputs
+async function loadSettingsOnce() {
+  try {
+    const snap = await getDoc(settingsRef);
+    if (snap.exists()) {
+      applySettingsToForm(snap.data());
+    }
+    // After initial load, subscribe to live updates
+    startSettingsListener();
+  } catch (err) {
+    console.error('[Settings] getDoc error:', err);
+    // Still try the live listener even if one-time fetch failed
+    startSettingsListener();
+  }
+}
+
+// Real-time listener: keeps form in sync whenever Firestore changes
+function startSettingsListener() {
+  onSnapshot(settingsRef, (snap) => {
+    const dot   = document.getElementById('ws-sync-dot');
+    const label = document.getElementById('ws-sync-label');
+    if (dot)   dot.style.background = 'var(--jade)';
+    if (label) label.textContent = 'Live — synced with Firestore';
+
+    if (snap.exists()) applySettingsToForm(snap.data());
+
+  }, (err) => {
+    console.error('[Settings] onSnapshot error:', err);
+    const dot   = document.getElementById('ws-sync-dot');
+    const label = document.getElementById('ws-sync-label');
+    if (dot)   dot.style.background = 'var(--rose)';
+    if (label) label.textContent = 'Connection error — check Firebase config';
+  });
+}
+
+// Save: collect all input values → setDoc with merge:true
+// setDoc is a top-level import — no dynamic import() needed here
+window.saveWebsiteSettings = async () => {
+  const btn    = document.getElementById('ws-save-btn');
+  const status = document.getElementById('ws-save-status');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving…'; }
+  if (status) status.textContent = '';
+
+  try {
+    const payload = {};
+    Object.entries(SETTING_FIELDS).forEach(([key, elId]) => {
+      const el = document.getElementById(elId);
+      if (el) payload[key] = el.value.trim();
+    });
+    payload.updatedAt = serverTimestamp();
+
+    // setDoc imported at top of module — works in all environments
+    await setDoc(settingsRef, payload, { merge: true });
+
+    toast('Website settings saved!', 'ok');
+    if (status) status.textContent = '✓ Saved at ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    console.error('[Settings] save error:', err);
+    const hint = err.code === 'permission-denied'
+      ? 'Permission denied — check your Firestore security rules.'
+      : (err.message || 'Unknown error');
+    toast('Save failed: ' + hint, 'er');
+    if (status) status.textContent = '✗ Save failed';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Save Settings'; }
+  }
+};
+
+window.confirmLogout = () => {
+    window.confirmUI("Logout?", "Your current admin session will be closed.", "End Session", async () => {
+        await signOut(auth);
+    });
+};
+</script>
+</body>
+</html>

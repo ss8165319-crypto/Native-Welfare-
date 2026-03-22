@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Login — Native Welfare</title>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="referrer" content="no-referrer"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── Same design tokens as index.html ── */
+:root{
+  --ink:#060a0f; --ink1:#0c1219; --ink2:#111a26;
+  --b0:rgba(255,255,255,.05); --b1:rgba(255,255,255,.09); --b2:rgba(255,255,255,.16);
+  --jade:#10b981; --jade-d:#059669; --jade-l:#6ee7b7;
+  --gold:#f59e0b; --gold-l:#fcd34d; --rose:#f43f5e;
+  --tx:#f0f4f8; --tx2:#8b98a9; --tx3:#4a5568;
+  --fh:'Instrument Serif',serif; --fb:'Geist',sans-serif;
+  --r:10px; --r2:18px; --r3:24px;
+  --ease:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{min-height:100%}
+body{background:var(--ink);color:var(--tx);font-family:var(--fb);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden}
+button{cursor:pointer;border:none;background:none;font:inherit}
+::selection{background:rgba(16,185,129,.3);color:#fff}
+
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);animation:drift 10s ease-in-out infinite}
+.o1{width:550px;height:550px;background:radial-gradient(circle,rgba(16,185,129,.09),transparent 70%);top:-150px;right:-100px}
+.o2{width:450px;height:450px;background:radial-gradient(circle,rgba(245,158,11,.06),transparent 70%);bottom:-130px;left:-80px;animation-delay:-5s}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(14px,-16px)}}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(rgba(16,185,129,.025) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(16,185,129,.025) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 20%,transparent 100%)}
+
+.card{
+  position:relative;z-index:2;
+  background:linear-gradient(145deg,rgba(17,26,38,.96),rgba(12,18,25,.98));
+  border:1px solid var(--b2);border-radius:var(--r3);
+  padding:46px 42px;width:100%;max-width:410px;
+  box-shadow:0 40px 80px rgba(0,0,0,.7),0 0 0 1px rgba(16,185,129,.07),inset 0 1px 0 var(--b1);
+  animation:cardIn .55s var(--spring) both;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--jade),var(--gold),transparent);
+  border-radius:var(--r3) var(--r3) 0 0}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.brand-sq{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--jade),var(--jade-d));
+  display:flex;align-items:center;justify-content:center;font-size:.84rem;font-weight:700;color:#fff;
+  box-shadow:0 4px 14px rgba(16,185,129,.4)}
+.brand-name{font-size:1.08rem;font-weight:600;letter-spacing:-.02em}
+.brand-name em{font-style:normal;color:var(--jade-l)}
+
+.card-title{font-family:var(--fh);font-size:1.85rem;font-weight:400;line-height:1.1;
+  letter-spacing:-.02em;margin-bottom:7px}
+.card-sub{font-size:.83rem;color:var(--tx2);margin-bottom:28px;line-height:1.6}
+.sub-badge{display:inline-flex;align-items:center;gap:5px;font-size:.65rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);margin-bottom:13px}
+.sub-badge::before{content:'';width:10px;height:1.5px;background:var(--tx3);border-radius:2px}
+
+.err{background:rgba(244,63,94,.09);border:1px solid rgba(244,63,94,.22);
+  border-radius:var(--r);padding:11px 14px;font-size:.82rem;color:#fb7185;
+  display:none;align-items:center;gap:7px;margin-bottom:16px;
+  animation:shake .38s var(--ease)}
+.err.show{display:flex}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+
+.form{display:flex;flex-direction:column;gap:15px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-lbl{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3)}
+.field-wrap{position:relative}
+.field-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.88rem;pointer-events:none}
+.field-in{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r);
+  padding:12px 40px 12px 40px;color:var(--tx);font-size:.9rem;font-family:var(--fb);
+  transition:border-color .2s,box-shadow .2s}
+.field-in::placeholder{color:var(--tx3)}
+.field-in:focus{outline:none;border-color:rgba(16,185,129,.48);box-shadow:0 0 0 3px rgba(16,185,129,.08)}
+.pw-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--tx3);cursor:pointer;padding:4px;transition:color .2s}
+.pw-btn:hover{color:var(--tx2)}
+
+.attempt-info{font-size:.72rem;color:var(--tx3);text-align:center;min-height:18px}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--jade),var(--jade-d));
+  color:#fff;border-radius:var(--r);font-size:.9rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 18px rgba(16,185,129,.38);
+  transition:all .22s var(--ease);overflow:hidden;position:relative}
+.btn-login::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);opacity:0;transition:opacity .2s}
+.btn-login:hover::after{opacity:1}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 7px 26px rgba(16,185,129,.52)}
+.btn-login:active{transform:scale(.97)}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn-login.loading .btn-txt{display:none}.btn-login.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.back{text-align:center;margin-top:20px;font-size:.76rem;color:var(--tx3)}
+.back a{color:var(--jade-l);transition:opacity .2s}.back a:hover{opacity:.7}
+
+.page-foot{position:fixed;bottom:14px;left:0;right:0;text-align:center;
+  font-size:.7rem;color:var(--tx3);z-index:2}
+</style>
+</head>
+<body>
+<div class="bg"><div class="orb o1"></div><div class="orb o2"></div></div>
+<div class="bg-grid"></div>
+
+<div class="card" id="card">
+  <div class="brand">
+    <div class="brand-sq">NW</div>
+    <div class="brand-name">Native <em>Welfare</em></div>
+  </div>
+
+  <div class="sub-badge">Secure Admin Access</div>
+  <h1 class="card-title">Welcome back,<br>Admin.</h1>
+  <p class="card-sub">Sign in to manage your store, products and content.</p>
+
+  <div class="err" id="err" role="alert">
+    <span>⚠️</span><span id="err-txt">Incorrect email or password.</span>
+  </div>
+
+  <form class="form" id="login-form" autocomplete="off" novalidate>
+    <div class="field">
+      <label class="field-lbl" for="un">Email Address</label>
+      <div class="field-wrap">
+        <span class="field-icon">👤</span>
+        <input class="field-in" type="email" id="un" placeholder="admin@example.com"
+               autocomplete="email" autocapitalize="none" spellcheck="false" required/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-lbl" for="pw">Password</label>
+      <div class="field-wrap">
+        <span class="field-icon">🔑</span>
+        <input class="field-in" type="password" id="pw" placeholder="Enter password" autocomplete="current-password" required/>
+        <button type="button" class="pw-btn" id="pw-tog">👁</button>
+      </div>
+    </div>
+    <div class="attempt-info" id="attempt-info"></div>
+    <button type="submit" class="btn-login" id="submit-btn">
+      <span class="btn-txt">🔐 Sign In to Admin Panel</span>
+      <div class="spinner"></div>
+    </button>
+  </form>
+
+  <div class="back"><a href="index.html">← Back to main website</a></div>
+</div>
+
+<div class="page-foot">Private admin area — unauthorised access is prohibited.</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCdpEdzNRuZKkc0Bru51ER4k4w-Ir-jElc",
+  authDomain: "native-welfare.firebaseapp.com",
+  databaseURL: "https://native-welfare-default-rtdb.firebaseio.com",
+  projectId: "native-welfare",
+  storageBucket: "native-welfare.firebasestorage.app",
+  messagingSenderId: "938557467037",
+  appId: "1:938557467037:web:6990a944b41f7b5b55e774",
+  measurementId: "G-4YGZK4Y4HY"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* ─── PROTECTION: REDIRECT IF ALREADY LOGGED IN ─────────── */
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // Save to localStorage for legacy panel compatibility if needed
+    localStorage.setItem('nw_admin_token', 'firebase_session_' + Date.now());
+    localStorage.setItem('nw_admin_login_time', Date.now().toString());
+    window.location.href = 'panel-k7x.html';
+  }
+});
+
+/* ─── UI ELEMENTS ────────────────────────────────────────── */
+const loginForm = document.getElementById('login-form');
+const emailIn   = document.getElementById('un');
+const passIn    = document.getElementById('pw');
+const submitBtn = document.getElementById('submit-btn');
+const errBox    = document.getElementById('err');
+const errTxt    = document.getElementById('err-txt');
+const pwTog     = document.getElementById('pw-tog');
+
+/* ─── SHOW ERROR HELPER ──────────────────────────────────── */
+function showError(msg) {
+  errTxt.textContent = msg;
+  errBox.classList.add('show');
+  submitBtn.classList.remove('loading');
+  submitBtn.disabled = false;
+  setTimeout(() => errBox.classList.remove('show'), 5000);
+}
+
+/* ─── PASSWORD TOGGLE ────────────────────────────────────── */
+pwTog.addEventListener('click', () => {
+  const type = passIn.type === 'password' ? 'text' : 'password';
+  passIn.type = type;
+  pwTog.textContent = type === 'password' ? '👁' : '🙈';
+});
+
+/* ─── LOGIN HANDLER ──────────────────────────────────────── */
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = emailIn.value.trim();
+  const password = passIn.value;
+
+  if (!email || !password) {
+    showError("Please enter both email and password.");
+    return;
+  }
+
+  // Set loading state
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged will handle the redirect
+  } catch (error) {
+    console.error("Login Error:", error.code);
+    let message = "An error occurred. Please try again.";
+    
+    switch (error.code) {
+      case 'auth/invalid-email':
+        message = "Invalid email format.";
+        break;
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        message = "Incorrect email or password.";
+        break;
+      case 'auth/too-many-requests':
+        message = "Too many failed attempts. Account locked temporarily.";
+        break;
+      case 'auth/network-request-failed':
+        message = "Network error. Check your connection.";
+        break;
+    }
+    
+    showError(message);
+    passIn.value = '';
+    passIn.focus();
+  }
+});
+
+// Auto-focus email field
+window.addEventListener('load', () => emailIn.focus());
+</script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Login — Native Welfare</title>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="referrer" content="no-referrer"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── Same design tokens as index.html ── */
+:root{
+  --ink:#060a0f; --ink1:#0c1219; --ink2:#111a26;
+  --b0:rgba(255,255,255,.05); --b1:rgba(255,255,255,.09); --b2:rgba(255,255,255,.16);
+  --jade:#10b981; --jade-d:#059669; --jade-l:#6ee7b7;
+  --gold:#f59e0b; --gold-l:#fcd34d; --rose:#f43f5e;
+  --tx:#f0f4f8; --tx2:#8b98a9; --tx3:#4a5568;
+  --fh:'Instrument Serif',serif; --fb:'Geist',sans-serif;
+  --r:10px; --r2:18px; --r3:24px;
+  --ease:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{min-height:100%}
+body{background:var(--ink);color:var(--tx);font-family:var(--fb);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden}
+button{cursor:pointer;border:none;background:none;font:inherit}
+::selection{background:rgba(16,185,129,.3);color:#fff}
+
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);animation:drift 10s ease-in-out infinite}
+.o1{width:550px;height:550px;background:radial-gradient(circle,rgba(16,185,129,.09),transparent 70%);top:-150px;right:-100px}
+.o2{width:450px;height:450px;background:radial-gradient(circle,rgba(245,158,11,.06),transparent 70%);bottom:-130px;left:-80px;animation-delay:-5s}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(14px,-16px)}}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(rgba(16,185,129,.025) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(16,185,129,.025) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 20%,transparent 100%)}
+
+.card{
+  position:relative;z-index:2;
+  background:linear-gradient(145deg,rgba(17,26,38,.96),rgba(12,18,25,.98));
+  border:1px solid var(--b2);border-radius:var(--r3);
+  padding:46px 42px;width:100%;max-width:410px;
+  box-shadow:0 40px 80px rgba(0,0,0,.7),0 0 0 1px rgba(16,185,129,.07),inset 0 1px 0 var(--b1);
+  animation:cardIn .55s var(--spring) both;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--jade),var(--gold),transparent);
+  border-radius:var(--r3) var(--r3) 0 0}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.brand-sq{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--jade),var(--jade-d));
+  display:flex;align-items:center;justify-content:center;font-size:.84rem;font-weight:700;color:#fff;
+  box-shadow:0 4px 14px rgba(16,185,129,.4)}
+.brand-name{font-size:1.08rem;font-weight:600;letter-spacing:-.02em}
+.brand-name em{font-style:normal;color:var(--jade-l)}
+
+.card-title{font-family:var(--fh);font-size:1.85rem;font-weight:400;line-height:1.1;
+  letter-spacing:-.02em;margin-bottom:7px}
+.card-sub{font-size:.83rem;color:var(--tx2);margin-bottom:28px;line-height:1.6}
+.sub-badge{display:inline-flex;align-items:center;gap:5px;font-size:.65rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);margin-bottom:13px}
+.sub-badge::before{content:'';width:10px;height:1.5px;background:var(--tx3);border-radius:2px}
+
+.err{background:rgba(244,63,94,.09);border:1px solid rgba(244,63,94,.22);
+  border-radius:var(--r);padding:11px 14px;font-size:.82rem;color:#fb7185;
+  display:none;align-items:center;gap:7px;margin-bottom:16px;
+  animation:shake .38s var(--ease)}
+.err.show{display:flex}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+
+.form{display:flex;flex-direction:column;gap:15px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-lbl{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3)}
+.field-wrap{position:relative}
+.field-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.88rem;pointer-events:none}
+.field-in{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r);
+  padding:12px 40px 12px 40px;color:var(--tx);font-size:.9rem;font-family:var(--fb);
+  transition:border-color .2s,box-shadow .2s}
+.field-in::placeholder{color:var(--tx3)}
+.field-in:focus{outline:none;border-color:rgba(16,185,129,.48);box-shadow:0 0 0 3px rgba(16,185,129,.08)}
+.pw-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--tx3);cursor:pointer;padding:4px;transition:color .2s}
+.pw-btn:hover{color:var(--tx2)}
+
+.attempt-info{font-size:.72rem;color:var(--tx3);text-align:center;min-height:18px}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--jade),var(--jade-d));
+  color:#fff;border-radius:var(--r);font-size:.9rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 18px rgba(16,185,129,.38);
+  transition:all .22s var(--ease);overflow:hidden;position:relative}
+.btn-login::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);opacity:0;transition:opacity .2s}
+.btn-login:hover::after{opacity:1}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 7px 26px rgba(16,185,129,.52)}
+.btn-login:active{transform:scale(.97)}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn-login.loading .btn-txt{display:none}.btn-login.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.back{text-align:center;margin-top:20px;font-size:.76rem;color:var(--tx3)}
+.back a{color:var(--jade-l);transition:opacity .2s}.back a:hover{opacity:.7}
+
+.page-foot{position:fixed;bottom:14px;left:0;right:0;text-align:center;
+  font-size:.7rem;color:var(--tx3);z-index:2}
+</style>
+</head>
+<body>
+<div class="bg"><div class="orb o1"></div><div class="orb o2"></div></div>
+<div class="bg-grid"></div>
+
+<div class="card" id="card">
+  <div class="brand">
+    <div class="brand-sq">NW</div>
+    <div class="brand-name">Native <em>Welfare</em></div>
+  </div>
+
+  <div class="sub-badge">Secure Admin Access</div>
+  <h1 class="card-title">Welcome back,<br>Admin.</h1>
+  <p class="card-sub">Sign in to manage your store, products and content.</p>
+
+  <div class="err" id="err" role="alert">
+    <span>⚠️</span><span id="err-txt">Incorrect email or password.</span>
+  </div>
+
+  <form class="form" id="login-form" autocomplete="off" novalidate>
+    <div class="field">
+      <label class="field-lbl" for="un">Email Address</label>
+      <div class="field-wrap">
+        <span class="field-icon">👤</span>
+        <input class="field-in" type="email" id="un" placeholder="admin@example.com"
+               autocomplete="email" autocapitalize="none" spellcheck="false" required/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-lbl" for="pw">Password</label>
+      <div class="field-wrap">
+        <span class="field-icon">🔑</span>
+        <input class="field-in" type="password" id="pw" placeholder="Enter password" autocomplete="current-password" required/>
+        <button type="button" class="pw-btn" id="pw-tog">👁</button>
+      </div>
+    </div>
+    <div class="attempt-info" id="attempt-info"></div>
+    <button type="submit" class="btn-login" id="submit-btn">
+      <span class="btn-txt">🔐 Sign In to Admin Panel</span>
+      <div class="spinner"></div>
+    </button>
+  </form>
+
+  <div class="back"><a href="index.html">← Back to main website</a></div>
+</div>
+
+<div class="page-foot">Private admin area — unauthorised access is prohibited.</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCdpEdzNRuZKkc0Bru51ER4k4w-Ir-jElc",
+  authDomain: "native-welfare.firebaseapp.com",
+  databaseURL: "https://native-welfare-default-rtdb.firebaseio.com",
+  projectId: "native-welfare",
+  storageBucket: "native-welfare.firebasestorage.app",
+  messagingSenderId: "938557467037",
+  appId: "1:938557467037:web:6990a944b41f7b5b55e774",
+  measurementId: "G-4YGZK4Y4HY"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* ─── PROTECTION: REDIRECT IF ALREADY LOGGED IN ─────────── */
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // Save to localStorage for legacy panel compatibility if needed
+    localStorage.setItem('nw_admin_token', 'firebase_session_' + Date.now());
+    localStorage.setItem('nw_admin_login_time', Date.now().toString());
+    window.location.href = 'panel-k7x.html';
+  }
+});
+
+/* ─── UI ELEMENTS ────────────────────────────────────────── */
+const loginForm = document.getElementById('login-form');
+const emailIn   = document.getElementById('un');
+const passIn    = document.getElementById('pw');
+const submitBtn = document.getElementById('submit-btn');
+const errBox    = document.getElementById('err');
+const errTxt    = document.getElementById('err-txt');
+const pwTog     = document.getElementById('pw-tog');
+
+/* ─── SHOW ERROR HELPER ──────────────────────────────────── */
+function showError(msg) {
+  errTxt.textContent = msg;
+  errBox.classList.add('show');
+  submitBtn.classList.remove('loading');
+  submitBtn.disabled = false;
+  setTimeout(() => errBox.classList.remove('show'), 5000);
+}
+
+/* ─── PASSWORD TOGGLE ────────────────────────────────────── */
+pwTog.addEventListener('click', () => {
+  const type = passIn.type === 'password' ? 'text' : 'password';
+  passIn.type = type;
+  pwTog.textContent = type === 'password' ? '👁' : '🙈';
+});
+
+/* ─── LOGIN HANDLER ──────────────────────────────────────── */
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = emailIn.value.trim();
+  const password = passIn.value;
+
+  if (!email || !password) {
+    showError("Please enter both email and password.");
+    return;
+  }
+
+  // Set loading state
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged will handle the redirect
+  } catch (error) {
+    console.error("Login Error:", error.code);
+    let message = "An error occurred. Please try again.";
+    
+    switch (error.code) {
+      case 'auth/invalid-email':
+        message = "Invalid email format.";
+        break;
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        message = "Incorrect email or password.";
+        break;
+      case 'auth/too-many-requests':
+        message = "Too many failed attempts. Account locked temporarily.";
+        break;
+      case 'auth/network-request-failed':
+        message = "Network error. Check your connection.";
+        break;
+    }
+    
+    showError(message);
+    passIn.value = '';
+    passIn.focus();
+  }
+});
+
+// Auto-focus email field
+window.addEventListener('load', () => emailIn.focus());
+</script>
+</body>
+</html>
+
